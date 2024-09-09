@@ -141,19 +141,11 @@ class Quaternion:
         Raises:
             ValueError: Invalid length or non-numeric value
         """
-        if seq is None:
+        if seq is None or len(seq) == 0:
             return np.zeros(n)
-        if len(seq) == n:
-            try:
-                l = [float(e) for e in seq]
-            except ValueError:
-                raise ValueError("One or more elements in sequence <{!r}> cannot be interpreted as a real number".format(seq))
-            else:
-                return np.asarray(l)
-        elif len(seq) == 0:
-            return np.zeros(n)
-        else:
-            raise ValueError("Unexpected number of elements in sequence. Got: {}, Expected: {}.".format(len(seq), n))
+        if len(seq) != n:
+            raise ValueError(f"Unexpected number of elements in sequence. Got: {len(seq)}, Expected: {n}.")
+        return np.array(seq, dtype=float)
 
     # Initialise from matrix
     @classmethod
@@ -172,7 +164,7 @@ class Quaternion:
         if shape == (3, 3):
             R = matrix
         elif shape == (4, 4):
-            R = matrix[:-1][:,:-1] # Upper left 3x3 sub-matrix
+            R = matrix[:3, :3] # Upper left 3x3 sub-matrix
         else:
             raise ValueError("Invalid matrix shape: Input must be a 3x3 or 4x4 numpy array or matrix")
 
@@ -628,14 +620,9 @@ class Quaternion:
             return self._rotate_quaternion(vector)
         q = Quaternion(vector=vector)
         a = self._rotate_quaternion(q).vector
-        if isinstance(vector, list):
-            l = [x for x in a]
-            return l
-        elif isinstance(vector, tuple):
-            l = [x for x in a]
-            return tuple(l)
-        else:
-            return a
+        if isinstance(vector, (list, tuple)):
+            return type(vector)(a)
+        return a
 
     @classmethod
     def exp(cls, q):
